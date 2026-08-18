@@ -1,0 +1,460 @@
+# GESCOM DATABASE SCHEMA CONTEXT
+
+You are working with the GESCOM Meter Replacement Project database.
+
+Use only the tables, columns, and relationships defined below.
+Do not invent tables, columns, or relationships.
+
+---
+
+## 1. meter_mains
+
+**Purpose:**
+
+Stores actual meter installation/replacement records.
+
+**Important fields:**
+
+* `account_id`
+* Old Meter Serial Number
+* New Meter Serial Number
+* Meter Type
+* Installation Date/Time
+* Contractor-related information
+
+**Important rule:**
+
+For meter installation analytics, always start from `meter_mains`.
+
+For a simple total installation count:
+
+```sql
+SELECT COUNT(*)
+FROM meter_mains;
+```
+
+---
+
+## 2. consumer_details
+
+**Purpose:**
+
+Stores consumer information and GESCOM organizational details.
+
+**Important fields:**
+
+* `account_id`
+* `division`
+* `sub_division`
+* `section`
+* `phase`
+* `meter_type`
+
+**Relationship:**
+
+```text
+meter_mains.account_id
+        ↓
+consumer_details.account_id
+```
+
+When Division, Sub Division, Section, or consumer information is required, use:
+
+```sql
+FROM meter_mains mm
+LEFT JOIN consumer_details cd
+    ON mm.account_id = cd.account_id
+```
+
+### Organizational fields
+
+The following fields are the primary organizational fields used for analytics:
+
+```text
+consumer_details.division
+consumer_details.sub_division
+consumer_details.section
+```
+
+* `division` stores the Division Code.
+* `sub_division` stores the Sub Division identifier/details.
+* `section` stores the Section identifier/details.
+* Sub Division and Section values may contain codes or names depending on the actual data.
+
+---
+
+# CRITICAL COLUMN RULES
+
+These rules must be followed strictly.
+
+### Division
+
+The `consumer_details` table DOES NOT contain a column named:
+
+```text
+division_code
+```
+
+The correct column is:
+
+```text
+consumer_details.division
+```
+
+`consumer_details.division` stores the Division Code.
+
+Therefore, NEVER generate:
+
+```sql
+cd.division_code
+```
+
+Always use:
+
+```sql
+cd.division
+```
+
+when filtering by Division Code.
+
+For example:
+
+```sql
+WHERE cd.division = '430005'
+```
+
+---
+
+### Sub Division
+
+The correct column is:
+
+```text
+consumer_details.sub_division
+```
+
+Do not invent:
+
+```text
+sub_division_code
+```
+
+or any other Sub Division column unless it is explicitly provided in this schema.
+
+For Sub Division-wise analysis, use:
+
+```sql
+GROUP BY cd.sub_division
+```
+
+---
+
+### Section
+
+The correct column is:
+
+```text
+consumer_details.section
+```
+
+Do not invent:
+
+```text
+section_code
+```
+
+or any other Section column unless it is explicitly provided in this schema.
+
+For Section-wise analysis, use:
+
+```sql
+GROUP BY cd.section
+```
+
+---
+
+### Division Code vs Division Name
+
+If the user provides a Division Code such as:
+
+```text
+430005
+```
+
+use it directly:
+
+```sql
+WHERE cd.division = '430005'
+```
+
+Do not attempt to resolve an already-provided Division Code through another table.
+
+If the user provides a human-readable Division name such as:
+
+```text
+Bidar
+```
+
+use the available database information to determine the corresponding Division Code before filtering `consumer_details.division`.
+
+Do not assume:
+
+```sql
+WHERE cd.division = 'Bidar'
+```
+
+---
+
+### Code or Name Identifiers
+
+Users may refer to organizational entities using either a code or a name.
+
+Examples:
+
+```text
+430005
+Bidar
+440018
+Kamthana
+450079
+```
+
+Interpret the identifier using the available database information and the organizational fields defined in this schema.
+
+Do not assume that every organizational value is numeric.
+
+---
+
+# METER INSTALLATION ANALYSIS RULES
+
+### Rule 1 — Start from meter_mains
+
+For questions involving installed or replaced meters, always start from:
+
+```text
+meter_mains
+```
+
+because it contains the actual meter installation records.
+
+---
+
+### Rule 2 — Join consumer_details using account_id
+
+When organizational or consumer information is required:
+
+```sql
+FROM meter_mains mm
+LEFT JOIN consumer_details cd
+    ON mm.account_id = cd.account_id
+```
+
+---
+
+### Rule 3 — Division analysis
+
+For Division-based installation analysis, filter using:
+
+```text
+consumer_details.division
+```
+
+Example:
+
+```sql
+SELECT COUNT(*)
+FROM meter_mains mm
+LEFT JOIN consumer_details cd
+    ON mm.account_id = cd.account_id
+WHERE cd.division = '430005';
+```
+
+---
+
+### Rule 4 — Sub Division analysis
+
+For Sub Division-wise installation analysis, use:
+
+```text
+consumer_details.sub_division
+```
+
+Example:
+
+```sql
+SELECT
+    cd.sub_division,
+    COUNT(*) AS meter_count
+FROM meter_mains mm
+LEFT JOIN consumer_details cd
+    ON mm.account_id = cd.account_id
+WHERE cd.division = '430005'
+GROUP BY cd.sub_division;
+```
+
+Return all matching Sub Divisions and their counts.
+
+Do not return only the first row.
+
+---
+
+### Rule 5 — Section analysis
+
+For Section-wise installation analysis, use:
+
+```text
+consumer_details.section
+```
+
+Example:
+
+```sql
+SELECT
+    cd.section,
+    COUNT(*) AS meter_count
+FROM meter_mains mm
+LEFT JOIN consumer_details cd
+    ON mm.account_id = cd.account_id
+WHERE cd.division = '430005'
+GROUP BY cd.section;
+```
+
+Return all matching Sections and their counts.
+
+---
+
+### Rule 6 — Avoid duplicate installation counts
+
+Do not introduce joins that can duplicate `meter_mains` records.
+
+For normal installation analysis, the preferred relationship is:
+
+```text
+meter_mains
+     ↓ account_id
+consumer_details
+```
+
+Preserve the original meter installation record granularity when calculating counts.
+
+---
+
+### Rule 7 — Breakdown queries
+
+When the user asks for a breakdown such as:
+
+```text
+Sub Division-wise meter installation
+```
+
+or:
+
+```text
+Section-wise meter installation
+```
+
+return all matching groups and their counts.
+
+Do not return only the first database row.
+
+---
+
+# OTHER DATABASE TABLES
+
+## 3. contractor_inventories
+
+**Purpose:**
+
+Stores contractor meter inventory and box allocation information.
+
+**Important fields:**
+
+* `contractor_id`
+* `box_id`
+* `serial_no`
+* `used_meter_serial_no`
+* `unused_meter_serial_no`
+
+The meter serial number fields may contain comma-separated values.
+
+Use this table for:
+
+* Contractor inventory analysis
+* Box-wise inventory analysis
+* Assigned meter count
+* Used meter count
+* Unused meter count
+
+---
+
+## 4. admins
+
+**Purpose:**
+
+Stores system users and manpower-related information.
+
+**Important fields:**
+
+* `id`
+* `name`
+* `type`
+* `project_name`
+* `user_name`
+* `phone`
+
+**Relationship:**
+
+```text
+admins.id
+    ↓
+contractor_inventories.contractor_id
+```
+
+Use `admins.type` when contractor-specific filtering is required.
+
+Do not assume every `admins` record represents a contractor.
+---
+# COMMON DATABASE RELATIONSHIPS
+
+### Meter Installation
+
+```text
+meter_mains
+     ↓ account_id
+consumer_details
+```
+
+### Contractor Inventory
+
+```text
+contractor_inventories.contractor_id
+     ↓
+admins.id
+```
+---
+
+# SQL SAFETY RULES
+
+For database analytics:
+
+1. Use only tables and columns defined in this schema.
+2. Do not invent column names.
+3. Do not invent relationships.
+4. Generate only read-only `SELECT` queries.
+5. Do not generate:
+
+   * `INSERT`
+   * `UPDATE`
+   * `DELETE`
+   * `DROP`
+   * `ALTER`
+   * `TRUNCATE`
+6. For meter installation analysis, start from `meter_mains`.
+7. Use `account_id` to connect `meter_mains` and `consumer_details`.
+8. Use `consumer_details.division` for Division Code filtering.
+9. Use `consumer_details.sub_division` for Sub Division analysis.
+10. Use `consumer_details.section` for Section analysis.
+11. Do not use `division_code`, `sub_division_code`, or `section_code` because these columns are not defined in this schema.
+12. Avoid joins that can duplicate meter installation records.
+13. When the required table, column, or relationship is not defined here, do not guess.
+14. For aggregation queries, return all required groups rather than only the first result.
