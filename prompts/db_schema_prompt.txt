@@ -19,21 +19,60 @@ Stores actual meter installation/replacement records.
 * Old Meter Serial Number
 * New Meter Serial Number
 * Meter Type
-* Installation Date/Time
+* `created_at`
 * Contractor-related information
 
 **Important rule:**
 
 For meter installation analytics, always start from `meter_mains`.
 
-For a simple total installation count:
+### Installation Date / Time
+
+The `created_at` column in `meter_mains` stores the actual date and time of the meter installation/replacement record.
+
+For business questions referring to:
+
+- Installation Date
+- Installation Date/Time
+- Meter Installation Date
+- Meter Installation Time
+- Monthly installation
+- Daily installation
+- Yearly installation
+- Installation trend
+
+**ALWAYS use `meter_mains.created_at`.**
+
+`created_at` is the ONLY database column to use for meter installation/replacement date and time analysis.
+
+Do NOT invent or assume columns such as:
+
+- `installation_date`
+- `installation_date_time`
+- `Installation Date`
+- `Installation Date/Time`
+
+The database column name is exactly:
+
+`created_at`
+
+**Example:**
+
+Question:
+
+"How many meters were installed in February 2026?"
+
+Use:
+
+`meter_mains.created_at`
+
+Example SQL pattern:
 
 ```sql
-SELECT COUNT(*)
-FROM meter_mains;
-```
-
----
+SELECT COUNT(*) AS meter_count
+FROM meter_mains
+WHERE created_at >= '2026-02-01'
+  AND created_at < '2026-03-01';
 
 ## 2. consumer_details
 
