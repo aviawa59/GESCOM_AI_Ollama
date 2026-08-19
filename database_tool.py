@@ -18,16 +18,30 @@ def create_connection():
     )
     return engine
 
-def query_database(sql):
-    engine = create_connection()
+def query_database(sql, params=None):
+    try:
+        engine = create_connection()
 
-    with engine.connect() as connection:
+        with engine.connect() as connection:
 
-        # Clean escaped formatting characters from LLM-generated SQL
-        sql = sql.replace("\\n", "\n").replace("\\t", "\t")
-        result = connection.execute(text(sql))
+            # Clean escaped formatting characters from LLM-generated SQL
+            sql = sql.replace("\\n", "\n").replace("\\t", "\t")
 
-        rows = result.mappings().all()
+            result = connection.execute(
+                text(sql),
+                params or {}
+            )
 
-        return [dict(row) for row in rows]
+            rows = result.mappings().all()
 
+            return {
+                "success": True,
+                "data": [dict(row) for row in rows]
+            }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error_type": "database_error",
+            "message": str(e)
+        }
