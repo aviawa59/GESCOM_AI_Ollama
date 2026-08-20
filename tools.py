@@ -4,13 +4,23 @@ tools = [
         "type": "function",
         "function": {
             "name": "query_database",
-            "description": "Execute a read-only SQL query against the GESCOM database.",
+            "description": (
+                "Execute a read-only SQL SELECT query against the "
+                "GESCOM database. Use this for GESCOM analytics, "
+                "including counts, summaries, filters, date analysis, "
+                "division, sub-division, section, meter type, contractor, "
+                "and other database-related questions."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "sql": {
                         "type": "string",
-                        "description": "SQL SELECT query to execute."
+                        "description": (
+                            "A valid read-only SQL SELECT query "
+                            "using only the tables and columns "
+                            "provided in the database schema."
+                        )
                     }
                 },
                 "required": ["sql"]
@@ -21,43 +31,18 @@ tools = [
     {
         "type": "function",
         "function": {
-            "name": "get_meter_count",
-            "description": "Get the total number of meters installed in the GESCOM Meter Replacement Project.",
+            "name": "get_current_datetime",
+            "description": (
+                "Get the current local date and time from the Python "
+                "runtime. Use this when the user refers to today, "
+                "yesterday, current date, current time, or another "
+                "relative date/time that requires the current date. "
+                "This tool does not provide GESCOM database information."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {},
                 "required": []
-            }
-        }
-    },
-
-    {
-        "type": "function",
-        "function": {
-            "name": "get_division_summary",
-            "description": "Get the total number of installed meters grouped by GESCOM division code.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": []
-            }
-        }
-    },
-
-    {
-        "type": "function",
-        "function": {
-            "name": "get_division_meter_count",
-            "description": "Get the total number of installed meters for a specific GESCOM division code.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "division_code": {
-                        "type": "string",
-                        "description": "GESCOM division code, for example 430005."
-                    }
-                },
-                "required": ["division_code"]
             }
         }
     }
