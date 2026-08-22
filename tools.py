@@ -45,6 +45,28 @@ tools = [
                 "required": []
             }
         }
-    }
+    },
+    {
+        "type" : "function",
+        "function" : {
+            "name" : "resolve_division",
+            "description" : (
+                    "Resolve a GESCOM division name or division code "
+                    "to the official division code and division name. "
+                    "Use this when the user refers to a specific division "
+                    "by name or code."
+                ),
+            "parameters" : {
+                "type" : "object",
+                "properties" : {
+                    "division" : {
+                        "type" : "string",
+                        "description" : "Division Name or Division Code provided by the users"
+                    }
+                },
+                "required" : ["division"]
+            }
+        }
+    } 
 
 ]

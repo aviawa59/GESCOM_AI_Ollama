@@ -378,7 +378,37 @@ Preserve the original meter installation record granularity when calculating cou
 
 ---
 
-### Rule 7 — Breakdown queries
+### Rule 7 ANALYTICAL HIERARCHY AND GRANULARITY
+
+GESCOM organizational analysis can be performed at multiple levels:
+
+Division
+    ↓
+Sub Division
+    ↓
+Section
+
+When a user asks for analysis at a specific organizational level,
+the SQL query must group the results at the level explicitly requested
+by the user.
+
+The requested grouping level must not be replaced by a higher-level
+total.
+
+### Division-wise Analysis
+
+If the user asks for:
+
+- Division-wise
+- Division-level
+- Meters by Division
+
+use:
+
+```sql
+GROUP BY cd.division
+
+### Rule 8 — Breakdown queries
 
 When the user asks for a breakdown such as:
 
