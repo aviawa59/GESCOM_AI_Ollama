@@ -337,7 +337,32 @@ Do not return only the first row.
 
 ---
 
-### Rule 5 — Section analysis
+### Rule 5 - Sub-Division Filter Value
+
+When a specific Sub-Division is mentioned in the user's question,
+use the actual value stored in `consumer_details.sub_division`.
+
+Sub-Division values may be either codes or names depending on the
+actual database records.
+
+Do NOT invent, derive, or assume a Sub-Division code from the
+Division Code.
+
+For example, if the database value is:
+
+`KAMTHANA`
+
+and the user asks:
+
+"Kamthana Sub-Division"
+
+use:
+
+```sql
+cd.sub_division = 'KAMTHANA'
+
+
+### Rule 6 — Section analysis
 
 For Section-wise installation analysis, use:
 
@@ -362,7 +387,7 @@ Return all matching Sections and their counts.
 
 ---
 
-### Rule 6 — Avoid duplicate installation counts
+### Rule 7 — Avoid duplicate installation counts
 
 Do not introduce joins that can duplicate `meter_mains` records.
 
@@ -378,7 +403,7 @@ Preserve the original meter installation record granularity when calculating cou
 
 ---
 
-### Rule 7 ANALYTICAL HIERARCHY AND GRANULARITY
+### Rule 8 ANALYTICAL HIERARCHY AND GRANULARITY
 
 GESCOM organizational analysis can be performed at multiple levels:
 
@@ -408,7 +433,7 @@ use:
 ```sql
 GROUP BY cd.division
 
-### Rule 8 — Breakdown queries
+### Rule 9 — Breakdown queries
 
 When the user asks for a breakdown such as:
 
